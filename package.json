@@ -1,0 +1,20 @@
+{
+  "name": "miniflare-dev-registry-watch-emfile",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "packageManager": "pnpm@10.24.0",
+  "scripts": {
+    "repro": "EXHAUST=1 node repro.js",
+    "repro:baseline": "node repro.js"
+  },
+  "dependencies": {
+    "fsevents": "2.3.3",
+    "miniflare": "4.20260730.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "workerd"
+    ]
+  }
+}
