@@ -1,6 +1,6 @@
 # Miniflare dev registry watcher crashes with uncaught `EMFILE` on macOS
 
-Upstream issue: _to be filed_. Versions: `miniflare` 4.20260730.0 (latest at the time), `fsevents` 2.3.3 (only to fill the FSEvents table), Node 24.22.3, pnpm 10.24.0, macOS 27.2.1 arm64.
+Upstream issue: https://github.com/cloudflare/workers-sdk/issues/17216. Versions: `miniflare` 4.20260730.0 (latest at the time), `fsevents` 2.3.3 (only to fill the FSEvents table), Node 24.22.3, pnpm 10.24.0, macOS 27.2.1 arm64.
 
 ## Steps
 
@@ -38,7 +38,7 @@ The registry watcher failing should not take the dev server down. Miniflare shou
 
 ## Analysis
 
-[`packages/miniflare/src/shared/dev-registry.ts` L115-L137 at `41bacf7`](https://github.com/cloudflare/workers-sdk/blob/41bacf7ce166b2151c858e06289d1711e41e4ff9/packages/miniflare/src/shared/dev-registry.ts#L115-L137):
+[`packages/miniflare/src/shared/dev-registry.ts` L115-L137 at `41bacf7`](https://github.com/cloudflare/workers-sdk/blob/41bacf7ce166b2151c858e06289d1711e41e4ff9/packages/miniflare/src/shared/dev-registry.ts#L115-L137) (comments trimmed):
 
 ```ts
 const watcher = watch(this.registryPath, {
@@ -54,7 +54,7 @@ Chokidar 4's `FSWatcher#_handleError` emits `"error"` for any code other than `E
 
 ## Error
 
-On macOS, the FSEvents stream table is limited to roughly 1024 streams per machine. When it is full, Node's `fs.watch` on a directory fails with `EMFILE`. Miniflare's dev registry watcher (`DevRegistry#watch`, which watches `unsafeDevRegistryPath` whenever a worker binds to a service outside the instance) creates a chokidar watcher and listens only for `"all"`. Chokidar re-emits the `EMFILE` as an `"error"` event, nothing listens for it, and Node throws it as an uncaught exception, killing the process (here: the Vite dev server running `@cloudflare/vite-plugin`).
+On macOS, the FSEvents stream table is limited to roughly 1024 streams per machine. When it is full, Node's `fs.watch` on a directory fails with `EMFILE`. Miniflare's dev registry watcher (`DevRegistry#watch`, which watches `unsafeDevRegistryPath` whenever a worker binds to a service outside the instance) creates a chokidar watcher and listens only for `"all"`. Chokidar re-emits the `EMFILE` as an `"error"` event, nothing listens for it, and Node throws it as an uncaught exception, killing the process (in a real setup, the Vite dev server running `@cloudflare/vite-plugin`).
 
 ```
 Error: EMFILE: too many open files, watch
